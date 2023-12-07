@@ -39,7 +39,7 @@ const TaskForm: FC<PropsTaskForm> = ({ defaultValue, onSubmit, isLoading }) => {
         className="rounded-full border bg-white/40 px-10 py-3 font-semibold transition hover:bg-white/20"
         disabled={isLoading}
       >
-        {isLoading ? "Submitting..." : "Submit"}
+        {isLoading ? "Submitting..." : "Add+"}
       </button>
     </form>
   );
