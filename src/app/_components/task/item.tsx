@@ -4,6 +4,7 @@ import { type FC, type ChangeEvent, useState } from "react";
 import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
 import Modal from "../modal";
 import TaskForm from "./form";
+import { toast } from "react-toastify";
 
 interface PropsTaskItem {
   task: Task;
@@ -15,11 +16,17 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
   const utils = api.useUtils();
 
   const onDeleteMutation = api.task.delete.useMutation({
-    onMutate: async ({ id }) => {
+    onMutate: async ({id}) => {
       await utils.task.getAll.cancel();
       utils.task.getAll.setData(undefined, (old) => {
         return old?.filter((t) => t.id !== id);
       });
+    },
+    onSuccess: ()=>{
+      toast("Deleteing success", { type: "success", autoClose: 1000 });
+    },
+    onError: () => {
+      toast("Deleting error", { type: "error", autoClose: 1000 });
     },
   });
 
@@ -35,19 +42,31 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
         });
       });
     },
+
+    onError: (error) => {
+      console.log(error);
+      toast("Updating task status error", { type: "error", autoClose: 1000 });
+    },
   });
 
   const editTaskMutation = api.task.update.useMutation({
-    onSuccess: async (editedTask) => {
+    onMutate: async(editedTask) => {
       await utils.task.getAll.cancel();
       utils.task.getAll.setData(undefined, (old) => {
         return old?.map((t) => {
           if (t.id === editedTask.id) {
-            return editedTask;
+            return {...t, text: editedTask.text};
           }
           return t;
         });
       });
+    },
+    onSuccess: ()=>{
+      toast("Task updating success", { type: "success", autoClose: 1000 });
+    },
+    onError: (error) => {
+      console.log(error);
+      toast("Editing task status error", { type: "error", autoClose: 1000 });
     },
   });
 
@@ -64,8 +83,8 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
   };
 
   const onUpdateTaskSubmit = ({ text }: { text: string }) => {
-    if(text===task.text){
-    editTaskMutation.mutate({ id: task.id, text });
+    if (text !== task.text) {
+      editTaskMutation.mutate({ id: task.id, text });
     }
     setIsEditing(false);
   };
@@ -113,12 +132,9 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
       </div>
       <div className="m-1 flex justify-end p-1">
         <span className="flex flex-col bg-neutral-300 bg-opacity-40 px-2">
-          {task.updatedAt.toLocaleString() ===
-          task.createdAt.toLocaleString() ? (
-            `Updated: ${task.updatedAt.toLocaleString()}`
-          ) : (
-            `${task.createdAt.toLocaleString()}`
-          )}
+          {task.updatedAt.toLocaleString() === task.createdAt.toLocaleString()
+            ? `Updated: ${task.updatedAt.toLocaleString()}`
+            : `${task.createdAt.toLocaleString()}`}
         </span>
       </div>
     </div>
