@@ -14,9 +14,8 @@ interface PropsTaskForm {
 }
 
 const TaskForm: FC<PropsTaskForm> = ({ defaultValue, onSubmit, isLoading }) => {
-  const defaultVal = defaultValue ?? "";
   const { register, setValue, handleSubmit } = useForm<FormValues>({
-    defaultValues: { text: defaultVal },
+    defaultValues: { text: defaultValue ?? "" },
   });
 
   const onFormSubmit: SubmitHandler<FormValues> = (data) => {
@@ -25,16 +24,19 @@ const TaskForm: FC<PropsTaskForm> = ({ defaultValue, onSubmit, isLoading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-2">
+    <form
+      onSubmit={handleSubmit(onFormSubmit)}
+      className="flex gap-2 rounded-full border bg-violet-600 p-1"
+    >
       <input
         type="text"
         placeholder="Task"
         className="w-full rounded-full px-4 py-2 text-black"
-        {...register("text")}
+        {...register("text", { maxLength: 250 })}
       />
       <button
         type="submit"
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold transition hover:bg-white/20"
+        className="rounded-full border bg-white/40 px-10 py-3 font-semibold transition hover:bg-white/20"
         disabled={isLoading}
       >
         {isLoading ? "Submitting..." : "Submit"}
