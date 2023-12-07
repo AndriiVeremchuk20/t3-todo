@@ -4,6 +4,7 @@ import { type FC, type ChangeEvent, useState } from "react";
 import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
 import Modal from "../modal";
 import TaskForm from "./form";
+import { toast } from "react-toastify";
 
 interface PropsTaskItem {
   task: Task;
@@ -15,11 +16,17 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
   const utils = api.useUtils();
 
   const onDeleteMutation = api.task.delete.useMutation({
-    onMutate: async ({ id }) => {
+    onMutate: async ({id}) => {
       await utils.task.getAll.cancel();
       utils.task.getAll.setData(undefined, (old) => {
         return old?.filter((t) => t.id !== id);
       });
+    },
+    onSuccess: ()=>{
+      toast("Deleteing success", { type: "success", autoClose: 1000 });
+    },
+    onError: () => {
+      toast("Deleting error", { type: "error", autoClose: 1000 });
     },
   });
 
@@ -35,19 +42,31 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
         });
       });
     },
+
+    onError: (error) => {
+      console.log(error);
+      toast("Updating task status error", { type: "error", autoClose: 1000 });
+    },
   });
 
   const editTaskMutation = api.task.update.useMutation({
-    onSuccess: async (editedTask) => {
+    onMutate: async(editedTask) => {
       await utils.task.getAll.cancel();
       utils.task.getAll.setData(undefined, (old) => {
         return old?.map((t) => {
           if (t.id === editedTask.id) {
-            return editedTask;
+            return {...t, text: editedTask.text};
           }
           return t;
         });
       });
+    },
+    onSuccess: ()=>{
+      toast("Task updating success", { type: "success", autoClose: 1000 });
+    },
+    onError: (error) => {
+      console.log(error);
+      toast("Editing task status error", { type: "error", autoClose: 1000 });
     },
   });
 
@@ -64,45 +83,59 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
   };
 
   const onUpdateTaskSubmit = ({ text }: { text: string }) => {
-    editTaskMutation.mutate({ id: task.id, text });
+    if (text !== task.text) {
+      editTaskMutation.mutate({ id: task.id, text });
+    }
     setIsEditing(false);
   };
 
   if (isEditing) {
     return (
       <Modal>
-        <TaskForm
-          onSubmit={onUpdateTaskSubmit}
-          isLoading={editTaskMutation.isLoading}
-          defaultValue={task.text}
-        />
+        <div className="w-3/4">
+          <TaskForm
+            onSubmit={onUpdateTaskSubmit}
+            isLoading={editTaskMutation.isLoading}
+            defaultValue={task.text}
+          />
+        </div>
       </Modal>
     );
   }
 
   return (
-    <div>
-      <div>
+    <div className="w-full p-2 hover:bg-white/10">
+      <div className="grid w-full grid-cols-6 gap-x-2">
         <input
           type="checkbox"
           defaultChecked={task.status}
           onChange={onUpdateStatusClick}
+          className="w-[30px]"
         />
-        <div>{task.text}</div>
-        <div>
-          <button onClick={editClickHandler}>
+        <div className="col-span-4 break-all">{task.text}</div>
+        <div className="space-x-2 text-xl">
+          <button
+            onClick={editClickHandler}
+            title="Edit task"
+            className="p-1 duration-100 hover:rounded-full hover:bg-white/40"
+          >
             <AiOutlineEdit />
           </button>
-          <button onClick={deleteClickHandler}>
+          <button
+            onClick={deleteClickHandler}
+            title="Delete task"
+            className="p-1 duration-100 hover:rounded-full hover:bg-white/40"
+          >
             <AiOutlineDelete />
           </button>
         </div>
       </div>
-      <div>
-        {task.updatedAt === task.createdAt
-          ? `Updated: ${task.updatedAt.toLocaleDateString()}`
-          : null}
-        {`Created: ${task.createdAt.toLocaleDateString()}`}
+      <div className="m-1 flex justify-end p-1">
+        <span className="flex flex-col bg-neutral-300 bg-opacity-40 px-2">
+          {task.updatedAt.toLocaleString() === task.createdAt.toLocaleString()
+            ? `Updated: ${task.updatedAt.toLocaleString()}`
+            : `${task.createdAt.toLocaleString()}`}
+        </span>
       </div>
     </div>
   );
