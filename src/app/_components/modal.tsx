@@ -1,4 +1,3 @@
-
 import { type FC, type ReactNode } from "react";
 
 interface PropsModal {
