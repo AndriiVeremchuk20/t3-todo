@@ -132,7 +132,7 @@ const TaskItem: FC<PropsTaskItem> = ({ task }) => {
       </div>
       <div className="m-1 flex justify-end p-1">
         <span className="flex flex-col bg-neutral-300 bg-opacity-40 px-2">
-          {task.updatedAt.toLocaleString() === task.createdAt.toLocaleString()
+          {task.updatedAt.toLocaleString() !== task.createdAt.toLocaleString()
             ? `Updated: ${task.updatedAt.toLocaleString()}`
             : `${task.createdAt.toLocaleString()}`}
         </span>
